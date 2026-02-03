@@ -1,0 +1,1 @@
+caixa_dialogo = noone
