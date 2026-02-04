@@ -1,46 +1,65 @@
 cria_efeito_squash()
 inicia_efeito_brilho()
 
-
+//Variavel de velocidade
 vel = 2
+//Variavel da velocidade Horizontal
 velh = 0
+//Variavel da velocidade Vertical
+velv = 0
+//Variavel dos inputs do teclado
 left  = false 
 right = false
 jump  = false
-velv = 0
+//Variavel da Velocidade maxima Vertical
 max_velv = 5
+//Variavel de gravidade
 grav  = .3
+//Variavel que controla se estou no chão ou não
 chao = false
+//Variavel que controla se estou na tinta ou não
 tinta = false
+//Variavel que controla se estou com powerUp ou não
 powerUp = false
+//Variavel que controla a minha direção
 dir = 1
+//Variavel que recebe quantas chaves o player possui
 chaves = 0
+//Variavel da velocidade do player quando ele correr
 shift_spd = 4
 
+//Variaveis para controlar o Coyote Timer
 coyote_timer = game_get_speed(gamespeed_fps) * .1
 coyote_timer_atual = coyote_timer
 
-
+//Variaveis para controlar o tempo de pulo 
 pulo_timer = game_get_speed(gamespeed_fps) * .1
 pulo_timer_atual = 0
 
-
+//Essa Variavel verificar se eu estou a X pixel de distancia do fim da minha "Parede"
+//Se eu estiver ele move o player X pixels como se ele escorregasse no teto quando esta 
+//Proximo a uma "Quina"
 corner_pixels = 8
 
 
 //qtd_pulos = 0
 //qtd_pulos_atual = qtd_pulos
 
-
+//Lista das sprites do player
 lista_sprites = [spr_correr_idle,spr_plr_idle]
+
+//Variavel responsavel pelo indice da lista de sprites do player
 indice_sprite = 0
 
+//Variavel que pega colisão com o tileset do jogo
 var _layer = layer_tilemap_get_id("level")
+//Lista de colisão
 colisoes = [obj_parede, _layer, obj_parede_one_way]
 
+//Variavel que controla o estado atual do player
 estado = noone
 
-
+//Metodo responsavel por pegar os inputs do teclado do jogador
 inputs = function (){
     left = keyboard_check(ord("A"))
     right = keyboard_check(ord("D"))
@@ -49,48 +68,68 @@ inputs = function (){
     shift = keyboard_check(vk_shift)
 }
 
-
+//Metodo de movimento do player
 movimento = function (){
     
+    //Ajustando a mascara de colisão do player
+    //Para a sprite do player parado
     mask_index = spr_plr_idle
     
     
     //Aplicando os inputs na velh
     velh = (right - left) * vel
     
+    //Checando se eu não estou colidindo com o chão
     if(!chao){
+        //Se não estou colidindo, eu aplico gravidade ao player
         velv += grav
-    }else {
+    }else { //Caso contrario, se estou colidindo com o chão
+        //Eu zero minha velocidade vertical
     	velv = 0
+        //Arredonda a posição Y para evitar que o player fique "preso" em pixels quebrados
         y = round(y)
         
+        //Checando se eu apertei o botão de pulo E se estou tocando no chão
         if(jump and chao){
+            //Se sim, eu uso a função de efeito_squash para esticar o player
             efeito_squash(.5,1.8)
+            //Faço o meu player subir
             velv -= max_velv
+            //Crio a particula de pulo 
             instance_create_depth(x,y,depth - 1, obj_part_pulo)
+            //Mudo o estado do player para o estado_pulo
             estado = estado_pulo
         }
         
+        //Checando se eu apertei o botão de pulo OU se o pulo_timer_atual é maior que 0
         if(jump or pulo_timer_atual > 0){
+            //Se for, eu faço o player subir
             velv = -max_velv
+            //Falo que o meu pulo_timer_atual é 0
             pulo_timer_atual = 0
         }
         
     }
     
-    //Usando o move and collide
+    // Move o personagem horizontalmente checando colisões (máximo de 4 pixels de ajuste)
     move_and_collide(velh,0,colisoes,4)
+    // Move o personagem verticalmente checando colisões (máximo de 12 pixels de ajuste)
     move_and_collide(0,velv,colisoes,12)
+    // Atualiza a variável 'chao' verificando se há uma colisão 1 pixel abaixo da posição atual
     chao = place_meeting(x,y+1,colisoes)
     
 }
 
 
-
+//Metodo de correr do player
 ativar_correr = function (){
+    //Se eu apertei a tecla SHIFT
     if(shift){
+        //Minha velocidade muda para a velocidade do shift_spd
         vel = shift_spd
     }else {
+        //Se eu não estou mais apertando o SHIFT
+        //Eu reseto a minha velocidade para o valor padrão
     	vel = 2 
     }
 }
@@ -98,7 +137,9 @@ ativar_correr = function (){
 
 //Criando meu metodo de coyote jump
 coyote_jumpe = function (){
+    //Checando se eu NÃO estou no chão
     if(!chao){
+        //Diminuindo o meu timer
         coyote_timer_atual--
     }else {
     	coyote_timer_atual = coyote_timer
